@@ -60,7 +60,10 @@ if [ "${GUNICORN_ENABLE:-0}" = "1" ]; then
   exec gunicorn "${WSGI_MODULE}" \
     --bind "${GUNICORN_BIND}" \
     --workers "${GUNICORN_WORKERS}" \
-    --timeout "${GUNICORN_TIMEOUT}"
+    --timeout "${GUNICORN_TIMEOUT}" \
+    --access-logfile - \
+    --error-logfile - \
+    --log-level info
 else
   : "${DJANGO_HOST?}[FATAL] DJANGO_HOST is required for runserver mode"
   : "${DJANGO_PORT?}[FATAL] DJANGO_PORT is required for runserver mode"

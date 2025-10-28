@@ -13,6 +13,7 @@ services:
       interval: 5s
       timeout: 3s
       retries: 20
+    profiles: [ "core" ]
     networks: [ app_net ]
     restart: unless-stopped
 
@@ -36,6 +37,7 @@ services:
       interval: 10s
       timeout: 3s
       retries: 20
+    profiles: [ "core" ]
     networks: [ app_net ]
     restart: unless-stopped
 

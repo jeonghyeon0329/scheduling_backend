@@ -16,8 +16,3 @@ urlpatterns = [
     path("logout/", LogoutView.as_view(), name="logout"),
     path("force-logout/", ForceLogoutView.as_view(), name="force_logout"),
 ]
-
-"""
-cookie를 다 지우고 로그아웃하니까 되는데? 
-
-"""
