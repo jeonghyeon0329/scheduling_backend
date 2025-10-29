@@ -122,7 +122,7 @@ class LoginView(views.APIView):
                     "code": "email or password missing",
                     "part": "CORE_SYSTEM",
                 },
-                status=status.HTTP_409_CONFLICT,
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
         try:
@@ -137,15 +137,25 @@ class LoginView(views.APIView):
                 status=status.HTTP_502_BAD_GATEWAY,
             )
 
-        if hr_status != 200:
+        if hr_status == 401:
+            return Response(
+                {
+                    "detail": "이메일 또는 비밀번호가 잘못되었습니다.",
+                    "code": "authentication_failed",
+                    "part": "HR_SYSTEM",
+                },
+                status=status.HTTP_401_UNAUTHORIZED,
+            )  
+        
+        elif hr_status >= 400:
             return Response(
                 {
                     "detail": "HR 시스템이 예상치 못한 응답을 반환했습니다.",
                     "code": "hr_unexpected_response",
                     "part": "HR_SYSTEM",
                 },
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            )  
+                status=status.HTTP_502_BAD_GATEWAY,
+            ) 
 
         external_user, _ = ExternalUser.objects.update_or_create(
             email=hr_res["email"],
