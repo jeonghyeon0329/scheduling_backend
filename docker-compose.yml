@@ -56,6 +56,8 @@ services:
     profiles: [ "hr" ]
     networks: [ app_net ]
     restart: unless-stopped
+    ports:
+      - "5432:5432" 
 
   hr_web:
     build:
