@@ -10,9 +10,9 @@ services:
       - core_pgdata:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -h localhost -U \"$$POSTGRES_USER\" || exit 1"]
-      interval: 5s
+      interval: 30s
       timeout: 3s
-      retries: 20
+      retries: 3
     profiles: [ "core" ]
     networks: [ app_net ]
     restart: unless-stopped
@@ -34,9 +34,9 @@ services:
         condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "curl -fsS http://localhost:8000/health/ || exit 1"]
-      interval: 10s
+      interval: 30s
       timeout: 3s
-      retries: 20
+      retries: 3
     profiles: [ "core" ]
     networks: [ app_net ]
     restart: unless-stopped
@@ -50,14 +50,12 @@ services:
       - hr_pgdata:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -h localhost -U \"$$POSTGRES_USER\" || exit 1"]
-      interval: 5s
+      interval: 30s
       timeout: 3s
-      retries: 20
+      retries: 3
     profiles: [ "hr" ]
     networks: [ app_net ]
     restart: unless-stopped
-    ports:
-      - "5432:5432" 
 
   hr_web:
     build:
@@ -76,9 +74,9 @@ services:
         condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "curl -fsS http://localhost:8001/health/ || exit 1"]
-      interval: 10s
+      interval: 30s
       timeout: 3s
-      retries: 20
+      retries: 3
     profiles: [ "hr" ]
     networks: [ app_net ]
     restart: unless-stopped
