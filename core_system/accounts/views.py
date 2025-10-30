@@ -176,7 +176,7 @@ class LoginView(views.APIView):
         return Response(
             {
                 "detail": "로그인 성공",
-                "user_id": str(external_user.external_user_id),
+                # "user_id": str(external_user.external_user_id),
                 "email": hr_res["email"],
             },
             status=status.HTTP_200_OK,
@@ -185,16 +185,9 @@ class LoginView(views.APIView):
 
 @method_decorator(csrf_protect, name="dispatch") 
 class LogoutView(views.APIView):
-    # authentication_classes = [SessionAuthentication]
-    # permission_classes = [IsAuthenticated]
-    
+        
     """로그아웃"""
     def post(self, request):
-        """
-            X-CSRFToken : Header : csrftoken 쿠키값
-            csrftoken : cookies : csrftoken 쿠키값
-            sessionid : cookies : sessionid 쿠키값
-        """
         logout(request)
         return Response(
             {
