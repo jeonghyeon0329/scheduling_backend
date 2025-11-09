@@ -42,8 +42,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'corsheaders', ## post api가 OPTIONS에서 종료되는 현상 방지
-    'accounts',
-    'clients'
+    'accounts'
 ]
 
 MIDDLEWARE = [
