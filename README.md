@@ -16,6 +16,7 @@ git clone https://github.com/jeonghyeon0329/scheduling_backend.git
 # 2) 가상환경 & 패키지 설치 (pip)
 python -m venv .venv
 source .venv/bin/activate     # Windows: .venv\Scripts\activate
+cd {system_name}
 pip install -r requirements.txt
 
 # 3) 마이그레이션 & 서버 실행
@@ -38,5 +39,5 @@ python manage.py runserver
 
 ## 📘 ER-다이어그램
 ![메인 페이지](./public/images/scheduling_system.drawio.png)
-- 초록색 테이블 : project별 app
-- 파란색 테이블 : project별 DB table
+- 초록색 : APP
+- 파란색 : Database
