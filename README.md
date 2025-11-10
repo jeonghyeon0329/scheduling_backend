@@ -38,6 +38,6 @@ python manage.py runserver
 - 역할: 일정 데이터 처리
 
 ## 📘 ER-다이어그램
-![메인 페이지](./public/images/scheduling_system.drawio.png)
+![메인 페이지](./public/images/scheduling_system.png)
 - 초록색 : APP
 - 파란색 : Database
