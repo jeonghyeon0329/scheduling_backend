@@ -13,6 +13,13 @@ class User(AbstractUser):
         return self.username or self.email
 
 
+class ExternalUserStatus(models.TextChoices):
+    ACTIVE = "active", "활성화"
+    INACTIVE = "inactive", "비활성화"
+    PENDING = "pending", "대기중"
+    DELETED = "deleted", "삭제됨"
+
+
 class ExternalUser(models.Model):
     external_user_id = models.UUIDField(
         primary_key=True,
@@ -23,7 +30,11 @@ class ExternalUser(models.Model):
     username = models.CharField(
         max_length=50,
         unique=True,
-        verbose_name="사용자명"
+        verbose_name="사용자 계정"
+    )
+    name = models.CharField(
+        max_length=50,
+        verbose_name="사용자 이름"
     )
     email = models.EmailField(
         max_length=255,
@@ -42,10 +53,6 @@ class ExternalUser(models.Model):
         db_table = "external_user"
         verbose_name = "외부 사용자"
         verbose_name_plural = "외부 사용자 목록"
-        indexes = [
-            models.Index(fields=["email"]),
-            models.Index(fields=["username"]),
-        ]
 
     def __str__(self):
         return f"{self.username} ({self.email})"
