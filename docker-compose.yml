@@ -13,8 +13,8 @@ services:
       interval: 30s
       timeout: 3s
       retries: 3
-    profiles: [ "core" ]
-    networks: [ app_net ]
+    profiles: ["core"]
+    networks: [app_net]
     restart: unless-stopped
 
   core_web:
@@ -37,8 +37,8 @@ services:
       interval: 30s
       timeout: 3s
       retries: 3
-    profiles: [ "core" ]
-    networks: [ app_net ]
+    profiles: ["core"]
+    networks: [app_net]
     restart: unless-stopped
 
   hr_db:
@@ -53,8 +53,8 @@ services:
       interval: 30s
       timeout: 3s
       retries: 3
-    profiles: [ "hr" ]
-    networks: [ app_net ]
+    profiles: ["hr"]
+    networks: [app_net]
     restart: unless-stopped
 
   hr_web:
@@ -77,8 +77,8 @@ services:
       interval: 30s
       timeout: 3s
       retries: 3
-    profiles: [ "hr" ]
-    networks: [ app_net ]
+    profiles: ["hr"]
+    networks: [app_net]
     restart: unless-stopped
 
 networks:
