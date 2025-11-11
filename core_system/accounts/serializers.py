@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from django.core.validators import RegexValidator
 from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError as DjangoValidationError
 
 class SignupInputSerializer(serializers.Serializer):
     username = serializers.CharField(
@@ -34,7 +35,10 @@ class SignupInputSerializer(serializers.Serializer):
         return v
 
     def validate_password(self, v: str):
-        validate_password(v)
+        try:
+            validate_password(v)
+        except DjangoValidationError as e:
+            raise serializers.ValidationError(e.messages)
         return v
 
     def to_internal_value(self, data):

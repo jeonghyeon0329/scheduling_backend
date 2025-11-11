@@ -10,13 +10,22 @@ from utils.response import success_response, error_response
 class SignupProxyView(APIView):
     authentication_classes = []
     permission_classes = []
+    FIELD_LABELS = {
+        "username": "아이디", 
+        "email": "이메일", 
+        "password": "비밀번호", 
+        "name": "이름"
+    }
 
     def post(self, request):
         serializer = SignupInputSerializer(data=request.data)
         if not serializer.is_valid():
+            field, messages = next(iter(serializer.errors.items()))
+            label = self.FIELD_LABELS.get(field, field)
+            priori_message = messages[0] if isinstance(messages, list) else str(messages)
             return error_response(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="입력값 검증 실패",
+                detail=f"{priori_message}",
                 part="CORE_SYSTEM",
                 errors=serializer.errors
             )
@@ -26,57 +35,45 @@ class SignupProxyView(APIView):
         email = payload["email"]
         name = payload["name"]
 
-        for field, value in [("username", username), ("email", email)]:
-            user = ExternalUser.objects.filter(**{field: value}).first()
-            if not user:
+        unique_field = {
+            "username": ("아이디", username),
+            "email": ("이메일", email),
+        }
+        for db_field, (label, value) in unique_field.items():
+            if not value:
                 continue
 
-            if user.status != ExternalUserStatus.ACTIVE:
+            user = ExternalUser.objects.filter(**{db_field: value}).first()
+            if user:
                 return error_response(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    detail=f"비활성화된 계정입니다.",
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail=f"이미 사용 중인 {label}입니다.",
                     part="CORE_SYSTEM",
-                    errors={}
+                    errors={label: value}
                 )
-            
-            return error_response(
-                status_code=status.HTTP_409_CONFLICT,
-                detail=f"이미 사용 중인 {field}입니다.",
-                part="CORE_SYSTEM",
-                errors={field: value}
-            )
 
         hr_status, hr_data = hr_post("/accounts/signup/", payload)
-        if not hr_data.get("success", False):
-            return error_response(
-                status_code=hr_status,
-                detail=hr_data.get("detail", "HR 시스템 회원가입 실패"),
-                part="HR_SYSTEM",
-                errors={},
-            )
-        
-        user_data = hr_data.get("data") or {}
-        if not isinstance(user_data, dict):
-            return error_response(
-                status_code=status.HTTP_502_BAD_GATEWAY,
-                detail="HR 응답 형식이 올바르지 않습니다. (data 누락)",
-                part="HR_SYSTEM",
-                errors={},
-            )
+        checks = [
+            ("HR 회원가입 응답 실패", not hr_data.get("success", False)),
+            ("HR 회원가입 data 필드 타입 오류", not isinstance(hr_data.get("data"), dict)),
+            ("HR 회원가입 user_id 누락", not hr_data.get("data", {}).get("user_id")),
+        ]
 
-        user_id = user_data.get("user_id")
-        if not user_id:
-            return error_response(
-                status_code=status.HTTP_502_BAD_GATEWAY,
-                detail="HR 응답 형식이 올바르지 않습니다. (일부 누락)",
-                part="HR_SYSTEM",
-                errors={},
-            )
+        for log_msg, condition in checks:
+            if condition:
+                # logger.error("[HR_SYSTEM ERROR] %s | status=%s | data=%s", log_msg, hr_status, hr_data)
+                return error_response(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail="내부 시스템 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.",
+                    part="HR_SYSTEM",
+                    errors={log_msg},
+                )
         
+        user_data = hr_data.get("data")
         try:
             with transaction.atomic():
                 ExternalUser.objects.update_or_create(
-                    external_user_id=user_id,
+                    external_user_id=user_data.get("user_id"),
                     defaults={
                         "username": user_data.get("username", username),
                         "name": user_data.get("name", name),
