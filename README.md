@@ -39,5 +39,3 @@ python manage.py runserver
 
 ## 📘 ER-다이어그램
 ![메인 페이지](./public/images/scheduling_system.png)
-- 초록색 : APP
-- 파란색 : Database
