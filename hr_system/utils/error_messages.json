@@ -1,0 +1,9 @@
+{
+  "This field is required.": "Field is required. (missing value)",
+  "This field may not be blank.": "Field cannot be blank.",
+  "Not a valid string.": "Invalid data type: expected a string value.",
+  "Username is already taken." : "Username is already taken.",
+  "Email is already taken." : "Email is already taken.",
+  "Invalid JSON response." : "Invalid JSON response.",
+  "HR Database integrity Error." : "HR Database integrity Error."
+}

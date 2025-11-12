@@ -42,8 +42,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'corsheaders', ## post api가 OPTIONS에서 종료되는 현상 방지
-    'accounts',
-    'admin_panel'
+    'accounts'
 ]
 
 REST_FRAMEWORK = {
@@ -120,8 +119,8 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
-# LANGUAGE_CODE = 'en-us'
-LANGUAGE_CODE = 'ko-kr'
+LANGUAGE_CODE = 'en-us'
+# LANGUAGE_CODE = 'ko-kr'
 
 TIME_ZONE = 'UTC'
 
