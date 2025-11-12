@@ -1,5 +1,4 @@
-# scheduling backend
-스케줄링 시스템 백엔드 개발
+# django_backend
 
 ---
 ## 📦 요구 사항
@@ -38,4 +37,5 @@ python manage.py runserver
 - 역할: 일정 데이터 처리
 
 ## 📘 ER-다이어그램
+
 ![메인 페이지](./public/images/scheduling_system.png)
