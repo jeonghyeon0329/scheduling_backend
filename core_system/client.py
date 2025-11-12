@@ -6,10 +6,19 @@ HR_BASE = config('HR_BASE_URL')
 def hr_post(path: str, data: dict):
     try:
         with httpx.Client() as client:
-            r = client.post(f"{HR_BASE}{path}", json=data, timeout=10)
+            r = client.post(f"{HR_BASE}{path}", json=data, timeout=3)
             try:
-                return r.status_code, r.json()
+                res_json = r.json()
+                return r.status_code, res_json
             except ValueError:
-                return r.status_code, {"detail": r.text or "Invalid JSON response"}
-    except httpx.RequestError as e:
-        return 502, {"detail": f"HR 시스템 연결 실패: {str(e)}"}
+                return r.status_code, {
+                    "success": False,
+                    "code": "HS_A2",
+                    "detail": "Invalid JSON response."
+                }
+    except httpx.RequestError:
+        return 502, {
+            "success": False,
+            "code": "HS_A1",
+            "detail": "Failed to reach HR system."
+        }

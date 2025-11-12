@@ -2,100 +2,91 @@ from django.db import transaction, IntegrityError
 from rest_framework.views import APIView
 from rest_framework import status
 from client import hr_post
-from .serializers import SignupInputSerializer
-from .models import ExternalUser, ExternalUserStatus
+from .serializers import SignupInputSerializer, ExternalUserInputSerializer
+from .models import ExternalUser
 from utils.response import success_response, error_response
-
 
 class SignupProxyView(APIView):
     authentication_classes = []
     permission_classes = []
-    FIELD_LABELS = {
-        "username": "아이디", 
-        "email": "이메일", 
-        "password": "비밀번호", 
-        "name": "이름"
-    }
 
     def post(self, request):
         serializer = SignupInputSerializer(data=request.data)
         if not serializer.is_valid():
-            field, messages = next(iter(serializer.errors.items()))
-            label = self.FIELD_LABELS.get(field, field)
-            priori_message = messages[0] if isinstance(messages, list) else str(messages)
+            error_message = next(
+                iter(next(iter(serializer.errors.values()))))
+
             return error_response(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"{priori_message}",
-                part="CORE_SYSTEM",
-                errors=serializer.errors
+                code = 'CS_A1',
+                message = error_message
             )
         
         payload = serializer.validated_data
         username = payload["username"]
         email = payload["email"]
-        name = payload["name"]
 
-        unique_field = {
-            "username": ("아이디", username),
-            "email": ("이메일", email),
-        }
-        for db_field, (label, value) in unique_field.items():
-            if not value:
-                continue
+        if ExternalUser.objects.filter(username=username).exists():
+            return error_response(
+                status_code=status.HTTP_409_CONFLICT,
+                code="CS_A2",
+                message="Username is already taken.",
+            )
 
-            user = ExternalUser.objects.filter(**{db_field: value}).first()
-            if user:
-                return error_response(
-                    status_code=status.HTTP_409_CONFLICT,
-                    detail=f"이미 사용 중인 {label}입니다.",
-                    part="CORE_SYSTEM",
-                    errors={label: value}
-                )
+        if ExternalUser.objects.filter(email=email).exists():
+            return error_response(
+                status_code=status.HTTP_409_CONFLICT,
+                code="CS_A2",
+                message="Email is already taken.",
+            )
 
         hr_status, hr_data = hr_post("/accounts/signup/", payload)
-        checks = [
-            ("HR 회원가입 응답 실패", not hr_data.get("success", False)),
-            ("HR 회원가입 data 필드 타입 오류", not isinstance(hr_data.get("data"), dict)),
-            ("HR 회원가입 user_id 누락", not hr_data.get("data", {}).get("user_id")),
-        ]
-
-        for log_msg, condition in checks:
-            if condition:
-                # logger.error("[HR_SYSTEM ERROR] %s | status=%s | data=%s", log_msg, hr_status, hr_data)
-                return error_response(
-                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    detail="내부 시스템 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.",
-                    part="HR_SYSTEM",
-                    errors={log_msg},
-                )
         
-        user_data = hr_data.get("data")
+        if not hr_data.get("success", False):
+            return error_response(
+                status_code=hr_status,
+                code=hr_data.get("code"),
+                message=hr_data.get("detail"),
+            )
+
+        serializer = ExternalUserInputSerializer(data=hr_data.get("data"))
+        if not serializer.is_valid():
+            error_message = next(
+                iter(next(iter(serializer.errors.values()))))
+            
+            return error_response(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                code="CS_A3",
+                message=error_message
+            )
+
+        validated_data = serializer.validated_data
+
         try:
             with transaction.atomic():
                 ExternalUser.objects.update_or_create(
-                    external_user_id=user_data.get("user_id"),
+                    external_user_id=validated_data["user_id"],
                     defaults={
-                        "username": user_data.get("username", username),
-                        "name": user_data.get("name", name),
-                        "email": user_data.get("email", email),
-                        "status": user_data.get("status", ExternalUserStatus.PENDING),
+                        "username": validated_data["username"],
+                        "name": validated_data["name"],
+                        "email": validated_data["email"],
+                        "status": validated_data["status"],
                     },
                 )
         except IntegrityError:
-            ## 동시 요청을 진행하는 경우 무결성 오류
             return error_response(
                 status_code=status.HTTP_409_CONFLICT,
-                detail="처리지연이 발생하고 있습니다. 잠시후 다시 시도해주시기 바랍니다.",
-                part="CORE_SYSTEM",
-                errors={},
+                code="CS_A4",
+                message="CR Database integrity Error."
             )
-
-
-        allowed_fields = ["username", "email", "name", "status"]
-        filtered_data = {k: v for k, v in user_data.items() if k in allowed_fields}
 
         return success_response(
             status_code=status.HTTP_201_CREATED,
             message="회원가입이 완료되었습니다.",
-            data=filtered_data,
+            data={
+                "username": validated_data["username"],
+                "email": validated_data["email"],
+                "name": validated_data["name"],
+                "status": validated_data["status"]
+            }
         )
