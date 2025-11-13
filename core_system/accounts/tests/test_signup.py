@@ -54,6 +54,18 @@ class SignupProxyTests(APITestCase):
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.data["code"], "CS_A1")
 
+    def test_password_validation_error(self):
+        """비밀번호 규칙 위반 → 400 (CS_A1)"""
+
+        invalid_data = self.payload.copy()
+        invalid_data["password"] = "123" # too short
+
+        response = self.client.post(self.url, invalid_data, format="json")
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.data["code"], "CS_A1")
+        self.assertEqual(response.data["detail"], "Password must be at least 8 characters long.")
+
+
     @patch("accounts.views.hr_post")
     def test_username_duplicate(self, mock_hr_post):
         """username 중복 → 409 (CS_A2)"""
