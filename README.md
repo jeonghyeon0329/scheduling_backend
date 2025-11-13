@@ -31,8 +31,10 @@ python manage.py runserver
 2. hr_system
 - 역할: 인사관리 서비스 (HR 전용)
 - 사용자 계정(User) 관리
-- 
+
+  
 ## 📘 ER-다이어그램
 
 ![메인 페이지](./public/images/django_backend.png)
+
 
