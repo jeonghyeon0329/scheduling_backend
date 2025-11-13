@@ -33,4 +33,5 @@ def main():
 
 
 if __name__ == '__main__':
+    # python manage.py test --verbosity=3
     main()
