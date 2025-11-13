@@ -1,7 +1,7 @@
-from decouple import config
+from django.conf import settings
 import httpx
 
-HR_BASE = config('HR_BASE_URL')
+HR_BASE = settings.HR_BASE_URL
 
 def hr_post(path: str, data: dict):
     try:
