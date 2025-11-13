@@ -10,7 +10,7 @@
 ## 🛠 설치
 ```bash
 # 1) 저장소 클론
-git clone https://github.com/jeonghyeon0329/scheduling_backend.git
+git clone https://github.com/jeonghyeon0329/django_backend.git
 
 # 2) 가상환경 & 패키지 설치 (pip)
 python -m venv .venv
@@ -38,4 +38,4 @@ python manage.py runserver
 
 ## 📘 ER-다이어그램
 
-![메인 페이지](./public/images/scheduling_system.png)
+![메인 페이지](./public/images/django_backend.png)
