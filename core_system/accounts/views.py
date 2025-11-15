@@ -103,13 +103,14 @@ class PasswordResetRequestView(APIView):
     permission_classes = []
 
     def post(self, request):
+        print("?")
         email = request.data.get("email")
 
         if not email:
             return error_response(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                code="CS_PW1",
-                message="Email is required."
+                code="CS_A5",
+                message="Email address is required."
             )
 
         hr_status, hr_data = hr_post("/accounts/password/reset/request/",

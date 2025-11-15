@@ -18,5 +18,6 @@
   "Invalid JSON response." : "Invalid JSON response.",
   "CR Database integrity Error." : "Processing delay is occurring.",
   "HR Database integrity Error" : "Processing delay is occurring..",
-  "Failed to reach HR system." : "Internal server error.(Account)"
+  "Failed to reach HR system." : "Internal server error.(Account)",
+  "Email address is required." : "Email address is required."
 }
