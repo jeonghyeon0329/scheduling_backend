@@ -3,9 +3,13 @@ from django.core.validators import RegexValidator
 from django.contrib.auth.password_validation import validate_password
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError as DjangoValidationError
-from accounts.models import ExternalUserStatus
+from accounts.models import ExternalUser, ExternalUserStatus
+from django.utils.encoding import force_str
+from django.utils.http import urlsafe_base64_decode
+
 
 User = get_user_model()
+
 
 class SignupInputSerializer(serializers.Serializer):
     username = serializers.CharField(
@@ -44,6 +48,7 @@ class SignupInputSerializer(serializers.Serializer):
             data[k] = data[k].strip()
         return data
 
+
 class ExternalUserInputSerializer(serializers.Serializer):
     user_id = serializers.UUIDField(required=True)
     username = serializers.CharField(required=True)
@@ -57,4 +62,27 @@ class ExternalUserInputSerializer(serializers.Serializer):
     def validate(self, attrs):
         if attrs.get("status") not in dict(ExternalUserStatus.choices):
             attrs["status"] = ExternalUserStatus.PENDING
+        return attrs
+
+
+class PasswordResetSerializer(serializers.Serializer):
+    uid = serializers.CharField(required=True)
+    token = serializers.CharField(required=True)
+    password = serializers.CharField(write_only=True, min_length=8, required=True)
+
+    def validate(self, attrs):
+        uidb64 = attrs.get("uid")
+        password = attrs.get("password")
+
+        try:
+            uid = force_str(urlsafe_base64_decode(uidb64))
+            user = ExternalUser.objects.get(pk=uid)
+        except Exception:
+            raise serializers.ValidationError({"password": "The link has expired."})
+
+        try:
+            validate_password(password, user=user)
+        except Exception as e:
+            raise serializers.ValidationError({"password": e.messages})
+        
         return attrs
