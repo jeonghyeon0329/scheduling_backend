@@ -20,9 +20,8 @@ def send_reset_email_async(to_email, reset_url, user_name):
             msg.attach_alternative(html_content, "text/html")
             msg.send()
 
-            print("📨 Email sent successfully!")
-
         except Exception as e:
+            # logger
             print("❌ Email send failed:", e)   
 
     threading.Thread(target=_send, daemon=True).start()

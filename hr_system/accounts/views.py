@@ -2,12 +2,14 @@ from django.contrib.auth import get_user_model
 from django.db import transaction, IntegrityError
 from rest_framework.views import APIView
 from rest_framework import status
-from .serializers import SignupInputSerializer
+from .serializers import SignupInputSerializer, PasswordResetSerializer
 from utils.response import success_response, error_response
 from utils.threading import send_reset_email_async
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
-from django.utils.encoding import force_bytes
-from django.utils.http import urlsafe_base64_encode
+from django.utils.encoding import force_bytes, force_str
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.conf import settings
+
 
 User = get_user_model()
 token_generator = PasswordResetTokenGenerator()
@@ -96,7 +98,8 @@ class PasswordResetRequestView(APIView):
             uid = urlsafe_base64_encode(force_bytes(user.pk))
             token = token_generator.make_token(user)
 
-            reset_url = f"https://frontend-domain/reset-password?uid={uid}&token={token}"
+            base_url = settings.FRONTEND_BASE_URL.rstrip("/")
+            reset_url = f"{base_url}/reset-password?uid={uid}&token={token}"
 
             send_reset_email_async(
                 to_email=email,
@@ -110,5 +113,53 @@ class PasswordResetRequestView(APIView):
         return success_response(
             status_code=status.HTTP_200_OK,
             message="If the email exists, a reset link was sent.",
+            data={}
+        )
+    
+class PasswordResetConfirmView(APIView):
+    authentication_classes = []
+    permission_classes = []
+
+    def post(self, request):
+
+        serializer = PasswordResetSerializer(data=request.data)
+        if not serializer.is_valid():
+            error_message = next(
+                iter(next(iter(serializer.errors.values()))))
+
+            return error_response(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                code = 'HS_A5',
+                message = error_message
+            )
+
+        payload = serializer.validated_data
+        uid = payload["uid"]
+        token = payload["token"]
+        password = payload["password"]
+        
+        try:
+            uid = force_str(urlsafe_base64_decode(uid))
+            user = User.objects.get(pk=uid)
+        except:
+            return error_response(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                code = 'HS_A6',
+                message = "Invalid JSON response."
+            )
+
+        if not token_generator.check_token(user, token):
+            return error_response(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                code = 'HS_A7',
+                message = "The link has expired."
+            )
+
+        user.set_password(password)
+        user.save()
+
+        return success_response(
+            status_code=200,
+            message="Password changed successfully.",
             data={}
         )

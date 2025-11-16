@@ -6,5 +6,6 @@
   "Email is already taken." : "Email is already taken.",
   "Invalid JSON response." : "Invalid JSON response.",
   "HR Database integrity Error." : "HR Database integrity Error.",
-  "Email address is required." : "Email address is required."
+  "Email address is required." : "Email address is required.",
+  "The link has expired." : "The link has expired."
 }

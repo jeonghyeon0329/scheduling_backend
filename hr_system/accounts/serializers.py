@@ -5,3 +5,8 @@ class SignupInputSerializer(serializers.Serializer):
     name = serializers.CharField(required=True, allow_blank=False)
     email = serializers.CharField(required=True, allow_blank=False)
     password = serializers.CharField(required=True, allow_blank=False, write_only=True)
+
+class PasswordResetSerializer(serializers.Serializer):
+    uid = serializers.CharField(required=True, allow_blank=False)
+    token = serializers.CharField(required=True, allow_blank=False)
+    password = serializers.CharField(required=True, allow_blank=False, write_only=True)
