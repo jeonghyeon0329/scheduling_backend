@@ -1,14 +1,15 @@
-from django.contrib.auth import get_user_model
+from django.contrib.auth import get_user_model, authenticate, login
 from django.db import transaction, IntegrityError
 from rest_framework.views import APIView
 from rest_framework import status
-from .serializers import SignupInputSerializer, PasswordResetSerializer
+from .serializers import SignupInputSerializer, LoginSerializer, PasswordResetSerializer
 from utils.response import success_response, error_response
 from utils.threading import send_reset_email_async
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.conf import settings
+from rest_framework_simplejwt.tokens import RefreshToken
 
 
 User = get_user_model()
@@ -78,6 +79,49 @@ class SignupView(APIView):
                 "status": "active",
             }
         )
+
+
+class LoginView(APIView):
+    authentication_classes = []
+    permission_classes = []
+
+    def post(self, request):
+        serializer = LoginSerializer(data=request.data)
+        if not serializer.is_valid():
+            error_message = next(
+                iter(next(iter(serializer.errors.values()))))
+
+            return error_response(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                code = 'HS_A8',
+                message = error_message
+            )
+
+        payload = serializer.validated_data
+        username = payload["username"]
+        password = payload["password"]  
+
+        user = authenticate(request, username=username, password=password)
+
+        if user is None:
+            return error_response(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                code="HS_A9",
+                message="Wrong Information or Unknown user."
+            )
+
+        login(request, user)
+        refresh = RefreshToken.for_user(user)
+        return success_response(
+            status_code=200,
+            message="Login success.",
+            data={
+                "access": str(refresh.access_token),
+                "refresh": str(refresh)
+            }
+        )
+
+
 
 class PasswordResetRequestView(APIView):
     authentication_classes = []
