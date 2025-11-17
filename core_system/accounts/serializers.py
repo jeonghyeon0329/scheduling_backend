@@ -49,6 +49,11 @@ class SignupInputSerializer(serializers.Serializer):
         return data
 
 
+class LoginSerializer(serializers.Serializer):
+    username = serializers.CharField(required=True)
+    password = serializers.CharField(write_only=True, required=True)
+
+
 class ExternalUserInputSerializer(serializers.Serializer):
     user_id = serializers.UUIDField(required=True)
     username = serializers.CharField(required=True)

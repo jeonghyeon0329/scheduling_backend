@@ -2,7 +2,7 @@ from django.db import transaction, IntegrityError
 from rest_framework.views import APIView
 from rest_framework import status
 from client import hr_post
-from .serializers import SignupInputSerializer, ExternalUserInputSerializer, PasswordResetSerializer
+from .serializers import SignupInputSerializer, ExternalUserInputSerializer, PasswordResetSerializer, LoginSerializer
 from .models import ExternalUser
 from utils.response import success_response, error_response
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
@@ -96,7 +96,39 @@ class SignupProxyView(APIView):
                 "status": validated_data["status"]
             }
         )
-    
+
+class LoginProxyView(APIView):
+    authentication_classes = []
+    permission_classes = []
+
+    def post(self, request):
+        serializer = LoginSerializer(data=request.data)
+        if not serializer.is_valid():
+            error_message = next(
+                iter(next(iter(serializer.errors.values()))))
+
+            return error_response(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                code = 'CS_A7',
+                message = error_message
+            )
+        payload = serializer.validated_data
+
+        hr_status, hr_data = hr_post("/accounts/login/", payload)
+
+        if not hr_data.get("success", False):
+            return error_response(
+                status_code=hr_status,
+                code=hr_data.get("code"),
+                message=hr_data.get("detail"),
+            )
+        else:
+            return success_response(
+                status_code=status.HTTP_200_OK,
+                message="login success",
+                data= hr_data.get("data")
+            )
+
 
 class PasswordResetRequestView(APIView):
     authentication_classes = []
